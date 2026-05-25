@@ -41,6 +41,14 @@
 - Twilio SIDs + auth tokens
 - Detection works across all file types: `.env`, `.ts`, `.json`, comments
 
+### Bypass persistence — important finding
+Once a secret value is bypassed via "used in tests", GitHub creates a **persistent
+exception for that exact value** in the repository. Subsequent pushes of the same
+value are not blocked. This means:
+- Test credential values must be rotated after every bypass to keep tests valid
+- If a real credential is mistakenly bypassed, it can be pushed freely thereafter
+- Audit the bypass log regularly: Security → Secret scanning → filter by "Bypassed"
+
 ### Recommendations
 1. **Enable custom patterns** for internal credentials not covered by partner patterns
 2. **Treat test credentials as production** — Stripe test keys are not blocked
