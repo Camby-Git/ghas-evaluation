@@ -1,0 +1,9 @@
+# Never commit real credentials
+tests/validity/validity-real.env
+results/actuals.md
+
+# OS
+.DS_Store
+
+# Claude
+.claude/settings.local.json
