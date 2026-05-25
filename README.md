@@ -1,7 +1,13 @@
 # GHAS Evaluation — Secret Scanning & Push Protection
 
-Test repository for evaluating GitHub Advanced Security (GHAS) secret scanning,
-push protection, and validity checks.
+Test repository for evaluating GitHub Advanced Security (GHAS) secret scanning
+and push protection.
+
+> **Note on validity checks:** Validity checks (GitHub contacting the provider
+> to confirm if a secret is still active) are restricted to paid GHAS plans
+> (GitHub Team + Secret Protection add-on, or GitHub Enterprise). They are
+> **not** available on free public repos. This evaluation covers secret scanning
+> and push protection only.
 
 ## Structure
 
@@ -39,22 +45,22 @@ results/
 
 ## Test Coverage
 
-| # | Secret Type         | Provider  | Push Protection | Validity Check |
-|---|---------------------|-----------|-----------------|----------------|
-| 1 | Personal Access Token | GitHub  | ✅ Supported    | ✅ Supported   |
-| 2 | OAuth Token         | GitHub    | ✅ Supported    | ✅ Supported   |
-| 3 | Access Key ID + Secret | AWS    | ✅ Supported    | ✅ Supported   |
-| 4 | API Key (live)      | Stripe    | ✅ Supported    | ✅ Supported   |
-| 5 | API Key (test)      | Stripe    | ✅ Supported    | ✅ Supported   |
-| 6 | Incoming Webhook    | Slack     | ✅ Supported    | ✅ Supported   |
-| 7 | API Key             | Google    | ✅ Supported    | ✅ Supported   |
-| 8 | API Key             | SendGrid  | ✅ Supported    | ✅ Supported   |
-| 9 | API Token           | Vercel    | ✅ Supported    | ✅ Supported   |
-|10 | Account SID + Token | Twilio    | ✅ Supported    | ✅ Supported   |
-|11 | Generic high-entropy| (custom)  | ❌ Not supported| ❌ Not supported|
-|12 | Secret in comment   | GitHub    | ✅ Supported    | ✅ Supported   |
-|13 | Secret in .env file | GitHub    | ✅ Supported    | ✅ Supported   |
-|14 | Secret in JSON config| Stripe   | ✅ Supported    | ✅ Supported   |
+| # | Secret Type          | Provider  | Push Protection | Validity Check          |
+|---|----------------------|-----------|-----------------|-------------------------|
+| 1 | Personal Access Token | GitHub   | ✅ Free         | 💰 Paid GHAS only       |
+| 2 | OAuth Token          | GitHub    | ✅ Free         | 💰 Paid GHAS only       |
+| 3 | Access Key ID + Secret | AWS     | ✅ Free         | 💰 Paid GHAS only       |
+| 4 | API Key (live)       | Stripe    | ✅ Free         | 💰 Paid GHAS only       |
+| 5 | API Key (test)       | Stripe    | ✅ Free         | 💰 Paid GHAS only       |
+| 6 | Incoming Webhook     | Slack     | ✅ Free         | 💰 Paid GHAS only       |
+| 7 | API Key              | Google    | ✅ Free         | 💰 Paid GHAS only       |
+| 8 | API Key              | SendGrid  | ✅ Free         | 💰 Paid GHAS only       |
+| 9 | API Token            | Vercel    | ✅ Free         | 💰 Paid GHAS only       |
+|10 | Account SID + Token  | Twilio    | ✅ Free         | 💰 Paid GHAS only       |
+|11 | Generic high-entropy | (custom)  | ❌ Not supported| ❌ Not supported         |
+|12 | Secret in comment    | GitHub    | ✅ Free         | 💰 Paid GHAS only       |
+|13 | Secret in .env file  | GitHub    | ✅ Free         | 💰 Paid GHAS only       |
+|14 | Secret in JSON config | Stripe   | ✅ Free         | 💰 Paid GHAS only       |
 
 ## How Push Protection Works
 
