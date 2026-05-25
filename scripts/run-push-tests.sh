@@ -52,6 +52,9 @@ run_test() {
   git -C "$REPO_ROOT" checkout -b "$branch" --quiet 2>/dev/null || \
     git -C "$REPO_ROOT" checkout "$branch" --quiet
 
+  # Append a timestamp so git always sees a change (files are pre-committed to main)
+  echo "# test-run: $(date -u +"%Y-%m-%dT%H:%M:%SZ")" >> "$file"
+
   # Stage only this test file
   git -C "$REPO_ROOT" add "$file"
   git -C "$REPO_ROOT" commit -m "test(${test_num}): push protection test — ${filename}" --quiet
@@ -75,8 +78,9 @@ run_test() {
   read -rp "  Record result (blocked/allowed/error): " result
   echo "  Test ${test_num} | ${filename} | Result: ${result}" >> "$REPO_ROOT/results/actuals.md"
 
-  # Clean up: return to main
+  # Clean up: return to main and restore the test file to its original state
   git -C "$REPO_ROOT" checkout main --quiet
+  git -C "$REPO_ROOT" checkout -- "$file" 2>/dev/null || true
 }
 
 cd "$REPO_ROOT"
