@@ -1,32 +1,48 @@
 # Expected Test Results
 
-> **Validity checks** require paid GHAS (GitHub Team + Secret Protection add-on,
-> or GitHub Enterprise). Not available on free public repos.
+> **Validity checks** require paid GHAS. Not available on free public repos.
 
-| # | File | Secret Type | Push Blocked? | Validity Check? | Notes |
+| # | File | Secret Type | Push Blocked? | Scanning Alert? | Notes |
 |---|------|-------------|:-------------:|:---------------:|-------|
-| 01 | github-pat.env | GitHub PAT (classic) | ✅ Yes | 💰 Paid only | `ghp_` prefix |
-| 02 | github-oauth.env | GitHub OAuth Token | ✅ Yes | 💰 Paid only | `gho_` prefix |
-| 03 | aws-credentials.env | AWS Access Key | ✅ Yes | 💰 Paid only | Both key ID and secret detected |
-| 04 | stripe-live.env | Stripe Live Secret Key | ✅ Yes | 💰 Paid only | Higher severity than test keys |
-| 05 | stripe-test.env | Stripe Test Secret Key | ✅ Yes | 💰 Paid only | Lower severity alert |
-| 06 | slack-webhook.env | Slack Incoming Webhook | ✅ Yes | 💰 Paid only | Full URL pattern |
-| 07 | google-api-key.env | Google API Key | ✅ Yes | 💰 Paid only | `AIza` prefix |
-| 08 | sendgrid.env | SendGrid API Key | ✅ Yes | 💰 Paid only | `SG.` prefix |
-| 09 | vercel-token.env | Vercel API Token | ✅ Yes | 💰 Paid only | Expanded coverage Mar 2026 |
-| 10 | twilio.env | Twilio Account SID + Auth Token | ✅ Yes | 💰 Paid only | Two secrets detected |
-| 11 | generic-high-entropy.env | Generic/custom | ❌ No | ❌ No | No partner pattern — key gap |
-| 12 | secret-in-code.ts | GitHub PAT + AWS (in code) | ✅ Yes | 💰 Paid only | Scans all file types |
-| 13 | secret-in-comment.ts | GitHub PAT (in comment) | ✅ Yes | 💰 Paid only | Scans comments |
-| 14 | secret-in-config.json | Stripe + SendGrid (in JSON) | ✅ Yes | 💰 Paid only | Scans JSON |
+| 01 | github-pat.env | GitHub PAT (classic) | ❌ No | ❓ Unknown | Push protection validates embedded CRC32 checksum — fake tokens without valid checksums are not blocked. Requires a real (then revoked) token to test. |
+| 02 | github-oauth.env | GitHub OAuth Token | ❌ No | ❓ Unknown | Same CRC32 checksum requirement as PATs. |
+| 03 | aws-credentials.env | AWS Access Key | ✅ Yes | ✅ Yes | Secret key must be exactly 40 chars. Fixed in v2 of test files. |
+| 04 | stripe-live.env | Stripe Live Secret Key | ✅ Yes | ✅ Yes | `sk_live_` prefix reliably blocked. |
+| 05 | stripe-test.env | Stripe Test Secret Key | ❌ No | ❓ Unknown | **Genuine gap:** push protection does not block `sk_test_` keys by default. |
+| 06 | slack-webhook.env | Slack Incoming Webhook | ✅ Yes | ✅ Yes | Full URL pattern reliably blocked. |
+| 07 | google-api-key.env | Google API Key | ❌ No | ✅ Yes | **Interesting gap:** scanning raises an alert but push protection confidence threshold not met for fake tokens. `AIza` pattern detected post-commit only. |
+| 08 | sendgrid.env | SendGrid API Key | ✅ Yes | ✅ Yes | `SG.` prefix reliably blocked. |
+| 09 | vercel-token.env | Vercel API Token | ❌ No | ❓ Unknown | Pattern too generic for push protection confidence threshold. |
+| 10 | twilio.env | Twilio SID + Auth Token | ✅ Yes | ✅ Yes | Both SID and auth token detected. |
+| 11 | generic-high-entropy.env | Generic/custom | ❌ No | ❌ No | No partner pattern — confirmed gap. Custom GHAS patterns required. |
+| 12 | secret-in-code.ts | GitHub PAT + AWS in code | ⚠️ Partial | ✅ Yes | AWS blocked; GitHub PAT not blocked (CRC32). Scanning catches both post-commit. |
+| 13 | secret-in-comment.ts | GitHub PAT in comment | ❌ No | ❓ Unknown | CRC32 checksum issue — not blocked. |
+| 14 | secret-in-config.json | Stripe + SendGrid in JSON | ✅ Yes | ✅ Yes | Both secrets blocked in JSON. |
 
-## Key Gaps to Evaluate
+## Summary
 
-1. **Generic secrets (Test 11)** — custom internal credentials are invisible to push
-   protection. Consider custom patterns in GHAS settings if needed.
+**Push protection blocked: 4/10 provider tests** (Stripe live, Slack, SendGrid, Twilio)
 
-2. **Validity check latency** — how long after a commit does validity appear?
+**Key findings**
 
-3. **Bypass audit trail** — are all bypasses captured in the audit log?
+### Genuine GHAS gaps
+| Gap | Impact | Mitigation |
+|-----|--------|-----------|
+| GitHub PAT/OAuth tokens require valid CRC32 checksum to trigger push protection | Fake tokens used in tests or docs pass through | Use real short-lived tokens in tests; rotate immediately |
+| Stripe test keys (`sk_test_`) not blocked by push protection | Test credentials can leak freely | Treat test keys as production secrets; add custom pattern |
+| Google API keys detected by scanning but not blocked at push time | Secrets reach the repo before alert fires | Monitor scanning alerts; consider custom push rule |
+| Generic/internal secrets not covered | Internal API keys, DB passwords invisible to GHAS | Add custom secret patterns in Advanced Security settings |
+| Vercel token pattern too ambiguous for push confidence threshold | Vercel credentials pass through | Custom pattern or use Vercel's token scoping |
 
-4. **Alert noise** — do fake-but-pattern-matching strings produce false positives?
+### What works reliably
+- Stripe live keys (`sk_live_`)
+- Slack webhooks
+- SendGrid API keys
+- Twilio SIDs + auth tokens
+- Detection works across all file types: `.env`, `.ts`, `.json`, comments
+
+### Recommendations
+1. **Enable custom patterns** for internal credentials not covered by partner patterns
+2. **Treat test credentials as production** — Stripe test keys are not blocked
+3. **Supplement push protection with scanning alerts** — Google keys reach the repo but are detected quickly post-commit
+4. **For GitHub token testing**, use a real throwaway PAT and revoke it immediately after the test

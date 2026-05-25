@@ -8,7 +8,7 @@ const config = {
   },
   aws: {
     accessKeyId: "AKIAQJ7MNPX2WLTRHV5K",
-    secretAccessKey: "8xKmN2pQ7tRwY3hA/dZ5bCeF4gJiLo1M0nPvQsr",
+    secretAccessKey: "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",
     region: "ap-southeast-2",
   },
 };
